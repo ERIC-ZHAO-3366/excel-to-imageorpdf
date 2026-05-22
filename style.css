@@ -1,0 +1,310 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f0f2f5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+
+.controls {
+    margin-bottom: 20px;
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column; /* 改为纵向排列行 */
+    gap: 15px;
+    align-items: center;
+    width: 95%; /* 增加宽度以容纳横向排列 */
+    max-width: 1600px; /* 增加最大宽度 */
+}
+
+.control-row {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+input[type="text"] {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 200px;
+}
+
+input[type="file"] {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+}
+
+button {
+    padding: 8px 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* 截图区域样式 */
+.capture-container {
+    /* 2. 背景是渐变色纯色背景 */
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    /* width: 800px;  移除固定宽度 */
+    /* min-width: 800px;  移除 CSS 中的最小宽度，由 JS 控制 */
+    width: fit-content; /* 宽度自适应内容 */
+    min-height: 500px;
+    color: #333;
+    box-sizing: border-box; /* 确保 padding 不会撑大预期宽度 */
+    
+    /* 字体变量 */
+    font-family: var(--font-family, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
+    
+    position: relative;
+    overflow: hidden; /* 裁剪超出范围的装饰 */
+    z-index: 0;
+}
+
+/* 背景装饰容器 */
+.bg-shapes {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* 在内容之下 */
+    pointer-events: none;
+}
+
+/* 颗粒感纹理 */
+.bg-grain {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* 与 shapes 同级，但在 DOM 中后置则覆盖 shapes */
+    pointer-events: none;
+    opacity: 0.07; /* 调整不透明度以控制颗粒感强弱 */
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* 单个装饰形状 */
+.bg-shape {
+    position: absolute;
+    border-radius: 50%;
+    /* 样式由 JS 动态生成 */
+}
+
+/* 3. 左上角为标题 */
+#tableTitle {
+    color: var(--title-color, white);
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: var(--title-size, 28px);
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    text-align: left; /* 左上角 */
+    position: relative;
+    z-index: 1;
+}
+
+.table-subtitle {
+    color: var(--subtitle-color, white);
+    margin-top: 0;
+    margin-bottom: 10px;
+    margin-left: var(--subtitle-indent, 15px); /* 比主标题靠内 */
+    font-size: var(--subtitle-size, 16px);
+    font-weight: normal;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    text-align: left;
+    position: relative;
+    z-index: 1;
+    min-height: 0; /* 确保空的时候不占位 */
+}
+.table-subtitle:empty {
+    display: none;
+}
+
+.table-sub-subtitle {
+    color: var(--sub-subtitle-color, white);
+    margin-top: 0;
+    margin-bottom: 20px;
+    margin-left: var(--subtitle-indent, 15px);
+    font-size: var(--sub-subtitle-size, 22px);
+    font-weight: normal;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    text-align: left;
+    position: relative;
+    z-index: 1;
+    min-height: 0;
+}
+.table-sub-subtitle:empty {
+    display: none;
+}
+
+.styled-table {
+    width: 100%;
+    border-collapse: collapse;
+    /* 使用 CSS 变量控制透明度，默认 0.9 */
+    --bg-opacity: 0.9;
+    background-color: rgba(255, 255, 255, var(--bg-opacity));
+    border-radius: 8px 8px 0 0;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+    
+    /* 表格文字颜色 */
+    color: var(--table-text-color, #333333);
+    
+    /* 磨砂效果 */
+    backdrop-filter: blur(var(--glass-blur, 0px));
+    -webkit-backdrop-filter: blur(var(--glass-blur, 0px));
+    position: relative;
+    z-index: 1;
+}
+
+/* 4. 针对第一行表头要有特殊突出 */
+.styled-table thead tr {
+    /* 使用 CSS 变量控制表头颜色，默认 #009879 */
+    background-color: var(--header-color, #009879);
+    color: var(--header-text-color, #ffffff);
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.styled-table th,
+.styled-table td {
+    padding: 12px 15px;
+    text-align: center;
+    white-space: normal; /* 允许换行 */
+    max-width: var(--max-cell-width, 10em); /* 最大宽度由变量控制 */
+    word-break: break-all; /* 允许长单词或中文强制换行 */
+}
+
+.table-note {
+    margin-top: 15px;
+    color: var(--note-color, white);
+    text-align: right;
+    font-size: 16px;
+    font-weight: 500;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    white-space: pre-wrap; /* 保留换行符 */
+    position: relative;
+    z-index: 1;
+}
+
+.styled-table tbody tr {
+    border-bottom: 1px solid #dddddd;
+}
+
+/* 1. 隔行填充底色 */
+.styled-table tbody tr:nth-of-type(even) {
+    /* 使用半透明黑色叠加，确保无论表格背景透明度如何，隔行深色效果都存在 */
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.styled-table tbody tr:nth-of-type(odd) {
+    /* 奇数行透明，显示表格整体背景色 */
+    background-color: transparent;
+}
+
+/* 最后一行去掉边框 */
+.styled-table tbody tr:last-of-type {
+    border-bottom: none;
+}
+
+/* Fieldset Styles */
+fieldset {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px;
+    margin: 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+legend {
+    font-weight: bold;
+    color: #555;
+    padding: 0 5px;
+}
+
+.controls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    width: 100%;
+    align-items: start;
+}
+
+.control-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.full-width {
+    grid-column: 1 / -1;
+}
+
+/* Compact input styles for the new layout */
+.compact-input-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+}
+
+.compact-input-group label {
+    white-space: nowrap;
+}
+
+.compact-input-group input[type="color"] {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: none;
+    cursor: pointer;
+}
+
+.compact-input-group input[type="range"] {
+    width: 80px;
+}
+
+.compact-input-group select {
+    padding: 4px;
+}
+
+.secondary-btn {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.secondary-btn:hover {
+    background-color: #5a6268;
+}

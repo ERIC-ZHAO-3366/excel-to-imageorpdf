@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>表格导出为图片</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/@zumer/snapdom/dist/snapdom.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/opentype.js/1.3.4/opentype.min.js"></script>
+</head>
+<body>
+    <div class="controls">
+        <div class="controls-grid">
+            <!-- 1. 内容设置 -->
+            <fieldset>
+                <legend>📝 内容设置</legend>
+                <div class="control-group">
+                    <div class="input-group full-width">
+                        <label for="excelInput">上传Excel：</label>
+                        <input type="file" id="excelInput" accept=".xlsx, .xls">
+                    </div>
+                    <div class="input-group">
+                        <label for="titleInput">标题：</label>
+                        <input type="text" id="titleInput" placeholder="请输入表格标题" value="季度销售报表" style="width: 150px;">
+                    </div>
+                    <div class="input-group">
+                        <label for="subtitleInput">副标题：</label>
+                        <input type="text" id="subtitleInput" placeholder="请输入副标题" value="" style="width: 150px;">
+                    </div>
+                    <div class="input-group">
+                        <label for="subSubtitleInput">二级副标题：</label>
+                        <input type="text" id="subSubtitleInput" placeholder="请输入二级副标题" value="" style="width: 150px;">
+                    </div>
+                    <div class="input-group full-width">
+                        <label for="noteInput">备注：</label>
+                        <input type="text" id="noteInput" placeholder="请输入备注信息（可选）" style="width: 50%;">
+                        <label style="font-size: 12px; cursor: pointer; display: flex; align-items: center; user-select: none;">
+                            <input type="checkbox" id="randomQuoteCheckbox"> 随机名言
+                        </label>
+                        <button id="refreshQuoteBtn" class="secondary-btn" title="刷新名言" style="padding: 4px 8px; font-size: 12px;">↻</button>
+                    </div>
+                </div>
+            </fieldset>
+
+            <!-- 2. 排版与字体 -->
+            <fieldset>
+                <legend>🔠 排版与字体</legend>
+                <div class="control-group">
+                    <div class="compact-input-group">
+                        <label>字体：</label>
+                        <select id="fontSelect" style="width: 100px;">
+                            <option value="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif">默认字体</option>
+                            <option value="'Microsoft YaHei', '微软雅黑', sans-serif">微软雅黑</option>
+                            <option value="'SimSun', '宋体', serif">宋体</option>
+                            <option value="'KaiTi', '楷体', serif">楷体</option>
+                            <option value="'Arial', sans-serif">Arial</option>
+                            <option value="'Times New Roman', serif">Times New Roman</option>
+                        </select>
+                        <button id="uploadFontBtn" class="secondary-btn" title="上传字体">+</button>
+                        <input type="file" id="fontInput" accept=".ttf, .otf, .woff, .woff2, .ttc" style="display: none;">
+                    </div>
+                    <div class="compact-input-group">
+                        <label>对齐：</label>
+                        <select id="textAlignSelect">
+                            <option value="left">左</option>
+                            <option value="center">中</option>
+                            <option value="right">右</option>
+                        </select>
+                    </div>
+                    <div class="compact-input-group">
+                        <label>备注对齐：</label>
+                        <select id="noteAlignSelect">
+                            <option value="left">左</option>
+                            <option value="center">中</option>
+                            <option value="right" selected>右</option>
+                        </select>
+                    </div>
+                    <div class="compact-input-group">
+                        <label>列宽：</label>
+                        <input type="range" id="widthInput" min="5" max="20" value="10" step="1">
+                        <span id="widthValue">10</span>
+                    </div>
+                    <div class="compact-input-group">
+                        <label>缩进：</label>
+                        <input type="range" id="subtitleIndentInput" min="0" max="200" value="15" step="1">
+                        <span id="subtitleIndentValue">15px</span>
+                    </div>
+                    <div class="compact-input-group">
+                        <label>标题大小：</label>
+                        <input type="range" id="titleSizeInput" min="20" max="80" value="28" step="1">
+                        <span id="titleSizeValue">28px</span>
+                    </div>
+                    <div class="compact-input-group">
+                        <label>副标大小：</label>
+                        <input type="range" id="subtitleSizeInput" min="10" max="50" value="16" step="1">
+                        <span id="subtitleSizeValue">16px</span>
+                    </div>
+                    <div class="compact-input-group">
+                        <label>二级大小：</label>
+                        <input type="range" id="subSubtitleSizeInput" min="10" max="50" value="22" step="1">
+                        <span id="subSubtitleSizeValue">22px</span>
+                    </div>
+                </div>
+            </fieldset>
+
+            <!-- 3. 配色与背景 -->
+            <fieldset>
+                <legend>🎨 配色与背景</legend>
+                <div class="control-group">
+                    <div class="compact-input-group full-width">
+                        <label>背景：</label>
+                        <select id="bgPresetSelect">
+                            <option value="custom">自定义</option>
+                            <option value="blue-purple" selected>蓝紫渐变</option>
+                            <option value="sunset">日落金橘</option>
+                            <option value="ocean">深海幽蓝</option>
+                            <option value="forest">清新森林</option>
+                            <option value="cherry">樱花粉红</option>
+                        </select>
+                        <input type="color" id="bgColor1" value="#667eea" title="起始颜色">
+                        <input type="color" id="bgColor2" value="#764ba2" title="结束颜色">
+                        <input type="number" id="bgAngle" value="135" step="45" min="0" max="360" style="width: 50px;" title="角度">
+                        <button id="randomBgBtn" class="secondary-btn" title="随机">🎲</button>
+                    </div>
+                    <div class="compact-input-group">
+                        <label>透明度：</label>
+                        <input type="range" id="opacityInput" min="0" max="1" step="0.1" value="0.9">
+                        <span id="opacityValue">0.9</span>
+                    </div>
+                    <div class="compact-input-group">
+                        <label>表头背景：</label>
+                        <input type="color" id="headerColorInput" value="#009879">
+                    </div>
+                    <div class="compact-input-group">
+                        <label>标题色：</label>
+                        <input type="color" id="titleColorInput" value="#ffffff">
+                    </div>
+                    <div class="compact-input-group">
+                        <label>副标色：</label>
+                        <input type="color" id="subtitleColorInput" value="#ffffff">
+                    </div>
+                    <div class="compact-input-group">
+                        <label>二级色：</label>
+                        <input type="color" id="subSubtitleColorInput" value="#ffffff">
+                    </div>
+                    <div class="compact-input-group">
+                        <label>表头字：</label>
+                        <input type="color" id="headerTextColorInput" value="#ffffff">
+                    </div>
+                    <div class="compact-input-group">
+                        <label>表格字：</label>
+                        <input type="color" id="tableTextColorInput" value="#333333">
+                    </div>
+                    <div class="compact-input-group">
+                        <label>备注色：</label>
+                        <input type="color" id="noteColorInput" value="#ffffff">
+                    </div>
+                </div>
+            </fieldset>
+
+            <!-- 4. 特效与导出 -->
+            <fieldset>
+                <legend>✨ 特效与导出</legend>
+                <div class="control-group">
+                    <div class="compact-input-group">
+                        <label>磨砂：</label>
+                        <input type="range" id="blurInput" min="0" max="20" value="0" step="1">
+                    </div>
+                    <div class="compact-input-group">
+                        <input type="checkbox" id="grainCheckbox">
+                        <label for="grainCheckbox">颗粒感</label>
+                        <input type="range" id="grainIntensityInput" min="0.01" max="0.3" step="0.01" value="0.07" style="display: none; width: 60px;">
+                    </div>
+                    <div class="compact-input-group full-width">
+                        <button id="toggleShapesBtn" class="secondary-btn">随机装饰</button>
+                        <button id="clearShapesBtn" class="secondary-btn" style="background-color: #6c757d;">清除</button>
+                    </div>
+                    <div class="control-group full-width" style="margin-top: 10px; justify-content: center;">
+                        <button id="exportBtn" style="width: 120px;">导出图片</button>
+                        <button id="exportPdfBtn" style="background-color: #dc3545; width: 120px;">导出PDF</button>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+    </div>
+
+    <!-- 这是一个预览区域，也是将被截图的区域 -->
+    <div id="capture-area" class="capture-container">
+        <div id="bg-shapes-container" class="bg-shapes"></div>
+        <h1 id="tableTitle">季度销售报表</h1>
+        <h2 id="tableSubtitle" class="table-subtitle"></h2>
+        <h3 id="tableSubSubtitle" class="table-sub-subtitle"></h3>
+        <table class="styled-table">
+            <thead>
+                <tr>
+                    <th>排名</th>
+                    <th>姓名</th>
+                    <th>部门</th>
+                    <th>达成率</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>沙丹</td>
+                    <td>公共事业部</td>
+                    <td>120%</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>奇爱葛格</td>
+                    <td>公共事业部</td>
+                    <td>100%</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>奇爱博士</td>
+                    <td>公共事业部</td>
+                    <td>80%</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>小西天之🐱</td>
+                    <td>公共事业部</td>
+                    <td>60%</td>
+                </tr>
+                <tr>
+                    <td>5</td>
+                    <td>百子湾之🐺</td>
+                    <td>公共事业部</td>
+                    <td>40%</td>
+                </tr>
+                 <tr>
+                    <td>6</td>
+                    <td>炸裂之主</td>
+                    <td>公共事业部</td>
+                    <td>20%</td>
+                </tr>
+            </tbody>
+        </table>
+        <div id="tableNote" class="table-note"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
